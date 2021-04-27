@@ -212,4 +212,42 @@ final class SlackTransportTest extends TransportTestCase
 
         $transport->send(new ChatMessage('testMessage'));
     }
+
+    public function testMessageIdSet()
+    {
+        $channel = 'testChannel';
+        $message = 'testMessage';
+
+        $response = $this->createMock(ResponseInterface::class);
+
+        $response->expects($this->exactly(2))
+            ->method('getStatusCode')
+            ->willReturn(200);
+
+        $response->expects($this->once())
+            ->method('getContent')
+            ->willReturn(json_encode(['ok' => true, 'ts' => '1503435956.000247']));
+
+        $notification = new Notification($message);
+        $chatMessage = ChatMessage::fromNotification($notification);
+        $options = SlackOptions::fromNotification($notification);
+
+        $expectedBody = json_encode([
+            'blocks' => $options->toArray()['blocks'],
+            'channel' => $channel,
+            'text' => $message,
+        ]);
+
+        $client = new MockHttpClient(function (string $method, string $url, array $options = []) use ($response, $expectedBody): ResponseInterface {
+            $this->assertJsonStringEqualsJsonString($expectedBody, $options['body']);
+
+            return $response;
+        });
+
+        $transport = $this->createTransport($client, $channel);
+
+        $sentMessage = $transport->send($chatMessage);
+
+        $this->assertEquals('1503435956.000247', $sentMessage->getMessageId());
+    }
 }
