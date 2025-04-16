@@ -56,6 +56,7 @@ class StoreFactoryTest extends TestCase
         }
         if (class_exists(AbstractAdapter::class) && MemcachedAdapter::isSupported()) {
             yield ['memcached://server.com', MemcachedStore::class];
+            yield ['memcached://server.com?namespace=prefix', MemcachedStore::class];
             yield ['memcached:?host[localhost]&host[localhost:12345]', MemcachedStore::class];
         }
         if (class_exists(\Redis::class) && class_exists(AbstractAdapter::class)) {
@@ -64,6 +65,7 @@ class StoreFactoryTest extends TestCase
             yield ['redis://localhost?redis_cluster=1', RedisStore::class];
             yield ['redis://localhost?redis_cluster=1&lazy=1', RedisStore::class];
             yield ['redis:?host[localhost]&host[localhost:6379]&redis_cluster=1', RedisStore::class];
+            yield ['redis://localhost?namespace=prefix', RedisStore::class];
         }
         if (class_exists(\PDO::class)) {
             yield ['sqlite:/tmp/sqlite.db', PdoStore::class];
